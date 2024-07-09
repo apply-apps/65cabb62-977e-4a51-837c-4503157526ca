@@ -1,53 +1,102 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+// Filename: index.js
+// Combined code from all files
 
-const App = () => {
-  const fullText = 'Hi, this is Apply.\nCreating mobile apps is now as simple as typing text.\nJust input your idea and press APPLY, and our platform does the rest...';
-  const [displayedText, setDisplayedText] = useState('');
-  const [index, setIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
+import React, { useState } from 'react';
+import { SafeAreaView, ScrollView, StyleSheet, Text, TextInput, Button, View } from 'react-native';
+import axios from 'axios';
 
-  useEffect(() => {
-    if (isPaused) return;
+export default function App() {
+  const [recipient, setRecipient] = useState('');
+  const [occasion, setOccasion] = useState('');
+  const [style, setStyle] = useState('');
+  const [greeting, setGreeting] = useState('');
 
-    const interval = setInterval(() => {
-      setDisplayedText((prev) => prev + fullText[index]);
-      setIndex((prev) => {
-        if (prev === fullText.length - 1) {
-          setIsPaused(true);
-          setTimeout(() => {
-            setDisplayedText('');
-            setIndex(0);
-            setIsPaused(false);
-          }, 2000);
-          return 0;
-        }
-        return prev + 1;
+  const handleGenerateGreeting = async () => {
+    try {
+      const response = await axios.post('http://p.appply.xyz:3300/chatgpt', {
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant. Please provide answers for given requests.' },
+          { role: 'user', content: `Создай поздравление для ${recipient} по случаю ${occasion} в стиле ${style}.` }
+        ],
+        model: 'gpt-4o',
       });
-    }, 100);
 
-    return () => clearInterval(interval);
-  }, [index, isPaused]);
+      const resultString = response.data.response;
+      setGreeting(resultString);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>{displayedText}</Text>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollView}>
+        <Text style={styles.title}>Создание Поздравлений</Text>
+        <View style={styles.box}>
+          <TextInput
+            style={styles.input}
+            placeholder="Кому поздравление"
+            value={recipient}
+            onChangeText={setRecipient}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="По какому поводу"
+            value={occasion}
+            onChangeText={setOccasion}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="В каком стиле"
+            value={style}
+            onChangeText={setStyle}
+          />
+          <Button title="Создать Поздравление" onPress={handleGenerateGreeting} />
+        </View>
+        {greeting && (
+          <View style={styles.box}>
+            <Text style={styles.greeting}>{greeting}</Text>
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    backgroundColor: 'black',
-    padding: 20,
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#FFFFFF',
   },
-  text: {
-    color: 'white',
+  scrollView: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  title: {
     fontSize: 24,
-    fontFamily: 'monospace',
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  input: {
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#CCCCCC',
+    marginBottom: 10,
+    width: '100%',
+  },
+  box: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 15,
+    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+    marginBottom: 20,
+    width: '100%',
+  },
+  greeting: {
+    fontSize: 18,
   },
 });
-
-export default App;
